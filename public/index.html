@@ -6,52 +6,6 @@
 </head>
 <body>
   <h1>Meta Ads Dashboard</h1>
-
-  <input id="accountId" placeholder="Enter Ad Account ID (e.g. act_123456789)" />
-  <button onclick="login()">Login with Facebook</button>
-
-  <div id="result"></div>
-
-  <script>
-    let isFbReady = false;
-
-    window.fbAsyncInit = function () {
-      FB.init({
-        appId: '709429934792295',
-        cookie: true,
-        xfbml: true,
-        version: 'v19.0'
-      });
-      isFbReady = true;
-    };
-
-    function login() {
-      if (!isFbReady) {
-        alert("Facebook SDK not ready.");
-        return;
-      }
-
-      FB.login(response => {
-        if (response.authResponse) {
-          const accessToken = response.authResponse.accessToken;
-          const accountId = document.getElementById('accountId').value;
-
-          fetch('/getAdsData', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accessToken, accountId })
-          })
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-          });
-        } else {
-          alert("Login failed.");
-        }
-      }, { scope: 'ads_read,business_management' });
-    }
-  </script>
-
-  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+  <a href="/login">Login with Facebook</a>
 </body>
 </html>
