@@ -36,13 +36,35 @@ app.get('/auth/callback', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    // Redirect to dashboard with no token in URL
-    res.sendFile(path.join(__dirname, 'public/set-token.html'));
+    // Inject token directly into the HTML response
+    const html = `
+      <html>
+        <head>
+          <title>Redirecting...</title>
+          <script>
+            sessionStorage.setItem('fbAccessToken', '${accessToken}');
+            window.location.href = '/dashboard.html';
+          </script>
+        </head>
+        <body>
+          <p>Redirecting to dashboard...</p>
+        </body>
+      </html>
+    `;
+
+    res.send(html);
   } catch (err) {
     console.error('Token Exchange Error:', err.response?.data || err.message);
-    res.status(500).send('Authentication failed. Please try again.');
+    res.status(500).send(`
+      <html>
+        <body>
+          <h2>Authentication failed. Please try again.</h2>
+        </body>
+      </html>
+    `);
   }
 });
+
 
 // Ads Data API
 app.post('/getAdsData', async (req, res) => {
