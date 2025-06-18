@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <script>
+    (async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (token) {
+        sessionStorage.setItem('fbAccessToken', token);
+        window.location.href = '/dashboard.html';
+      } else {
+        document.body.innerHTML = '<h2>Error: Missing token.</h2>';
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting to dashboard...</p>
+</body>
+</html>

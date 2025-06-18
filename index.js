@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const FB_APP_ID = process.env.FB_APP_ID;
 const FB_APP_SECRET = process.env.FB_APP_SECRET;
-const REDIRECT_URI = 'https://ads-qs9w.onrender.com/auth/callback/';
+const REDIRECT_URI = 'https://ads-qs9w.onrender.com/auth/callback';
 
 // Redirect to Facebook login
 app.get('/login', (req, res) => {
@@ -19,12 +19,13 @@ app.get('/login', (req, res) => {
   res.redirect(url);
 });
 
-// Facebook redirects here with a code
-app.get('/auth/callback/', async (req, res) => {
+// Callback after Facebook login
+app.get('/auth/callback', async (req, res) => {
   const code = req.query.code;
 
   try {
-    const tokenRes = await axios.get(`https://graph.facebook.com/v19.0/oauth/access_token?` +
+    const tokenRes = await axios.get(
+      `https://graph.facebook.com/v19.0/oauth/access_token?` +
       querystring.stringify({
         client_id: FB_APP_ID,
         redirect_uri: REDIRECT_URI,
@@ -35,52 +36,36 @@ app.get('/auth/callback/', async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    res.send(`
-      <h1>Ad Dashboard</h1>
-      <form onsubmit="event.preventDefault(); fetchAdData()">
-        <input id="accountId" placeholder="Enter Ad Account ID (e.g. act_123456789)" />
-        <button type="submit">Get Ads Data</button>
-      </form>
-      <pre id="output"></pre>
-      <script>
-        const accessToken = "${accessToken}";
-        function fetchAdData() {
-          const accountId = document.getElementById('accountId').value;
-          fetch('/getAdsData', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ accessToken, accountId })
-          })
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-          });
-        }
-      </script>
-    `);
+    // Redirect to dashboard with no token in URL
+    res.sendFile(path.join(__dirname, 'public/set-token.html'));
   } catch (err) {
     console.error('Token Exchange Error:', err.response?.data || err.message);
-    res.status(500).send('Error during authentication.');
+    res.status(500).send('Authentication failed. Please try again.');
   }
 });
 
 // Ads Data API
 app.post('/getAdsData', async (req, res) => {
   const { accessToken, accountId } = req.body;
+
+  if (!accessToken || !accountId) {
+    return res.status(400).json({ error: 'Access token and account ID are required.' });
+  }
+
   try {
-    const fields = ['campaign_name', 'ad_name', 'impressions', 'spend', 'reach'];
     const result = await axios.get(`https://graph.facebook.com/v19.0/${accountId}/insights`, {
       params: {
         access_token: accessToken,
-        fields: fields.join(','),
+        fields: ['campaign_name', 'ad_name', 'impressions', 'spend', 'reach'].join(','),
         level: 'ad',
         time_range: JSON.stringify({ since: '2024-06-01', until: '2024-06-15' })
       }
     });
+
     res.json(result.data);
   } catch (err) {
     console.error('Ad Data Error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to fetch ad data' });
+    res.status(500).json({ error: 'Failed to fetch ad data.' });
   }
 });
 

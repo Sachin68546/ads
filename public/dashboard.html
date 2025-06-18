@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meta Ads Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      flex: 1;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #0057e7;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0040b3;
+    }
+    pre {
+      background-color: #f0f0f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Meta Ads Dashboard</h1>
+    <div class="error" id="errorMsg"></div>
+    <form onsubmit="event.preventDefault(); fetchAdData()">
+      <input id="accountId" placeholder="Enter Ad Account ID (e.g. act_123456789)" />
+      <button type="submit">Fetch Ads Data</button>
+    </form>
+    <pre id="output">Ad data will appear here...</pre>
+  </div>
+
+  <script>
+    const accessToken = sessionStorage.getItem('fbAccessToken');
+
+    function fetchAdData() {
+      const accountId = document.getElementById('accountId').value;
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = '';
+
+      if (!accountId) {
+        errorMsg.textContent = 'Please enter a valid ad account ID.';
+        return;
+      }
+
+      if (!accessToken) {
+        errorMsg.textContent = 'Access token not found. Please log in again.';
+        return;
+      }
+
+      fetch('/getAdsData', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, accountId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('output').textContent = `Error: ${data.error}`;
+        } else {
+          document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('output').textContent = 'Failed to fetch ad data.';
+      });
+    }
+  </script>
+</body>
+</html>
